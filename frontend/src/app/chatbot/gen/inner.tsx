@@ -1,6 +1,6 @@
 'use client';
 
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation'; // to access URL query params
 import { useEffect, useState } from 'react';
 
 import Nav from '@/components/Nav';
@@ -12,6 +12,7 @@ import BubbleBackground from '@/components/Bubble';
 import { motion } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
 
+// UI and logic for the generate page
 export default function GeneratePage() {
   const [heroRef, heroInView] = useInView({
     triggerOnce: true,
@@ -23,16 +24,18 @@ export default function GeneratePage() {
   const { locale } = useLanguage();
   const isSpanish = locale === 'es';
 
+  // UI states
   const [isDownloadOpen, setIsDownloadOpen] = useState(false);
   const [isPreviewOpen, setIsPreviewOpen] = useState(true);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'en' | 'es'>('en');
 
+  // file states
   const [fileUrls, setFileUrls] = useState({ en: '', es: '' });
   const [fileNames, setFileNames] = useState({ en: '', es: '' });
-
   const [loading, setLoading] = useState({ en: true, es: true });
 
+  // background bubbles animation
   const bubbles = [
     { color: '#9EDED5', size: 100, top: '15%', left: '10%', delay: '0s' },
     { color: '#FFD700', size: 120, top: '25%', left: '25%', delay: '0.7s' },
@@ -41,6 +44,7 @@ export default function GeneratePage() {
     { color: '#F47820', size: 200, top: '30%', left: '65%', delay: '3.0s' },
   ];
 
+  // helper to check file existence via HEAD request
   const checkIfFileExists = async (url: string): Promise<boolean> => {
     try {
       const response = await fetch(url, { method: 'HEAD' });
@@ -52,6 +56,7 @@ export default function GeneratePage() {
 
   useEffect(() => {
     if (userId) {
+      // generate file URLs from userId
       const enName = `${userId}_en.pdf`;
       const esName = `${userId}_es.pdf`;
       const enUrl = `https://storage.googleapis.com/lc-resume-docs/${enName}`;
@@ -60,6 +65,7 @@ export default function GeneratePage() {
       setFileNames({ en: enName, es: esName });
       setFileUrls({ en: enUrl, es: esUrl });
 
+      // check file readiness
       const waitAndCheck = async () => {
         let enReady = false;
         let esReady = false;
@@ -81,6 +87,7 @@ export default function GeneratePage() {
     }
   }, [userId]);
 
+  // render error if userId is missing
   if (!userId) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 p-8">
@@ -91,6 +98,7 @@ export default function GeneratePage() {
     );
   }
 
+  // accordian UI for collapsible sections
   const Accordion = ({
     isOpen,
     setIsOpen,
@@ -134,6 +142,8 @@ export default function GeneratePage() {
       <Nav />
 
         <BubbleBackground bubbles={bubbles} />
+
+        {/* Main Hero Section */}
         <section ref={heroRef} className="px-2 sm:px-0 pt-10 pb-8">
             <motion.div
                     initial={{ opacity: 0, y: 20 }}
@@ -164,7 +174,6 @@ export default function GeneratePage() {
               >
                 <div>
                   {/* Tab Controls */}
-                  {/* Tab Controls */}
                   <div className="flex mb-4 border-b border-gray-300">
                     <button
                       type="button"
@@ -189,9 +198,6 @@ export default function GeneratePage() {
                       Español
                     </button>
                   </div>
-
-
-
 
                   {/* Iframe Previews */}
                   <div className="border rounded-lg shadow-inner overflow-hidden">

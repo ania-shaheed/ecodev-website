@@ -1,12 +1,13 @@
 'use client';
 
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation'; // to access URL query params
 import { useEffect, useState } from 'react';
 import Nav from '@/components/Nav';
 import Footer from '@/components/Footer';
 import { useLanguage } from '@/context/LanguageContext';
 import dynamic from 'next/dynamic';
 
+// import bot component disabling SSR
 const DialogflowBot = dynamic(() => import('@/components/DiagflowBot'), {
     ssr: false,
     loading: () => (
@@ -16,6 +17,7 @@ const DialogflowBot = dynamic(() => import('@/components/DiagflowBot'), {
     )
 });
 
+// UI and logic for the bot page
 export default function Inner() {
     const { locale } = useLanguage();
     const isSpanish = locale === 'es';
@@ -25,11 +27,12 @@ export default function Inner() {
     const [error, setError] = useState<string | null>(null);
     const [isGenerateEnabled, setIsGenerateEnabled] = useState(false);
 
+    // callback when dialogflow session ends
     const handleSessionEnd = () => {
         setIsGenerateEnabled(true);
     };
 
-
+    // validate userId on mount
     useEffect(() => {
         if (!userId) {
             setError('Missing user ID. Please go back and complete the form.');
@@ -40,6 +43,7 @@ export default function Inner() {
     <>
         <Nav />
 
+        {/* Main page content */}
         <main className="min-h-screen bg-gray-50 py-12 px-4">
         <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-md p-8">
             {error ? (
@@ -56,9 +60,11 @@ export default function Inner() {
                         ? 'Empieza a chatear para construir tu currículum automáticamente.'
                         : 'Start chatting to build your resume automatically.'}
                 </p>
-
+                
+                {/* Dialogflow bot component, reloaded when userId changes */}
                 <DialogflowBot key={userId} userId={userId!} onSessionEnd={handleSessionEnd} />
                 
+                {/* Resume generation button */}
                 <div className="flex justify-center">
                     <button
                         id="generate-btn"

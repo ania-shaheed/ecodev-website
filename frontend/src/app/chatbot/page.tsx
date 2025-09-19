@@ -15,6 +15,7 @@ export default function ChatPage() {
         threshold: 0.1
     });
 
+    // scroll smoothly to form section
     const formRef = useRef<HTMLFormElement>(null);
     const scrollToForm = () => {
         formRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -23,16 +24,19 @@ export default function ChatPage() {
     const { locale } = useLanguage();
     const isSpanish = locale === 'es';
 
+    // form fields
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [phone, setPhone] = useState('');
     const [location, setLocation] = useState('');
 
+    // validation flags
     const [validName, setValidName] = useState(false);
     const [validEmail, setValidEmail] = useState(false);
     const [validPhone, setValidPhone] = useState(false);
     const [validLocation, setValidLocation] = useState(false);
 
+    // simple validation for each field
     const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const val = e.target.value;
         setName(val);
@@ -48,7 +52,6 @@ export default function ChatPage() {
     const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const val = e.target.value;
         setPhone(val);
-        // Simple phone validation (digits and +, -, spaces)
         setValidPhone(/^[\d+\-\s()]{7,}$/.test(val));
     };
 
@@ -58,12 +61,15 @@ export default function ChatPage() {
         setValidLocation(val.trim().length > 1);
     };
 
+    // enable button only if all fields are valid
     const allValid = validName && validEmail && validPhone && validLocation;
 
+    // when button is clicked, data is sent to backend and user is redirected to chatbot
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!allValid) return; // just in case
 
+        // unique ID to track user
         const userId = crypto.randomUUID();
         const payload = { userId, data: { name, email, phone, location } };
 

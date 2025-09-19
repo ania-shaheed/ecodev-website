@@ -8,6 +8,7 @@ interface DfMessengerElement extends HTMLElement {
   sendQuery?: (query: string) => void;
 }
 
+// component receives the current userId and a callback when the chat session ends
 export default function DialogflowBot({
   userId,
   onSessionEnd,
@@ -22,14 +23,15 @@ export default function DialogflowBot({
   useEffect(() => {
     const scriptId = 'df-messenger-script';
 
-    // Only inject the script if it hasn't been added
+    // only inject the script if it hasn't been added
     if (!document.getElementById(scriptId)) {
       const script = document.createElement('script');
       script.id = scriptId;
       script.src = 'https://www.gstatic.com/dialogflow-console/fast/df-messenger/prod/v1/df-messenger.js';
       script.async = true;
       document.head.appendChild(script);
-
+      
+      // once loaded, initialize immediately 
       script.onload = () => {
         initMessenger();
       };
@@ -39,10 +41,10 @@ export default function DialogflowBot({
     function initMessenger() {
       if (!containerRef.current) return;
 
-      // Clear previous bot instance
+      // clear previous bot instance
       containerRef.current.innerHTML = '';
 
-      // Create the df-messenger element
+      // create the df-messenger element
       const dfMessenger = document.createElement('df-messenger');
       dfMessenger.setAttribute('location', 'us');
       dfMessenger.setAttribute('project-id', 'la-colaborativa');
@@ -53,7 +55,7 @@ export default function DialogflowBot({
       dfMessenger.setAttribute('auto-open', 'false');
       dfMessenger.setAttribute('trigger-event-on-init', 'false');
 
-      // Custom styles
+      // custom styles
       dfMessenger.style.setProperty('--df-messenger-primary-color', '#01666F');
       dfMessenger.style.setProperty('--df-messenger-focus-color', '#F37920');
       dfMessenger.style.setProperty('--df-messenger-font-color', '#333333');
@@ -68,33 +70,38 @@ export default function DialogflowBot({
       dfMessenger.style.setProperty('--df-messenger-send-icon-offset-x', '15px');
       dfMessenger.style.setProperty('--df-messenger-message-stack-spacing', '20px');
 
-      // Inner chat panel
+      // inner chat panel
       const chat = document.createElement('df-messenger-chat');
       chat.setAttribute('chat-title', isSpanish ? 'Asistente de Currículum' : 'Resume Assistant');
       dfMessenger.appendChild(chat);
 
+      // mount
       containerRef.current.appendChild(dfMessenger);
 
+      // retry until functions are ready
       const maxAttempts = 20;
       let attempts = 0;
       const interval = setInterval(() => {
         const el = containerRef.current?.querySelector('df-messenger') as DfMessengerElement | null;
         if (!el) return;
 
+        // attach a userID so Dialogflow can track context/session
         try {
           if (typeof el.setQueryParameters === 'function') {
             el.setQueryParameters({ parameters: { userID: userId } });
           }
 
+          // send initial message ("Hi") to trigger conversation flow
           if (typeof el.sendQuery === 'function') {
             el.sendQuery('Hi');
           }
 
+          // listen for when the user closes the chat session
           el.addEventListener('df-session-ended', () => {
             onSessionEnd?.();
-            // DO NOT remove panel — just optionally log or show something
           });
 
+          // stop polling once Messenger is fully initialized
           clearInterval(interval);
         } catch {
           if (++attempts > maxAttempts) clearInterval(interval);
